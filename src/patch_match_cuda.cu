@@ -407,10 +407,10 @@ __global__ void testTextImgs_(cudaTextureObject_t* d_texs) {
 }
 
 void ComputeBearingsEquirect(float* d_Bearingmap, const int width, const int height) {
-	
+
 	cudaEvent_t start, stop;
 	float gpu_time = 0.0f;
-	
+
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 	cudaEventRecord(start, 0);
@@ -429,7 +429,9 @@ void ComputeBearingsEquirect(float* d_Bearingmap, const int width, const int hei
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&gpu_time, start, stop);
+#ifndef NDEBUG
 	printf("DEBUG: Time spent bearing map: %.8f ms\n", gpu_time);
+#endif
 
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
@@ -465,7 +467,9 @@ void ComputeRandomPlanemapDepthmap(float* d_Depthmap, float* d_Planemap,float*  
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&gpu_time, start, stop);
+#ifndef NDEBUG
 	printf("DEBUG: Time spent random depth and plane maps: %.8f ms\n", gpu_time);
+#endif
 
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
@@ -500,7 +504,9 @@ void ComputeRandomPlanemap(float* d_Planemap, float* d_Depthmap, float* d_Bearin
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&gpu_time, start, stop);
+#ifndef NDEBUG
 	printf("DEBUG: Time spent random planemap: %.8f ms\n", gpu_time);
+#endif
 
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
@@ -536,7 +542,9 @@ void ScorePlaneDepth(const int patchhalf, float* d_Scoremap, float* d_Depthmap, 
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&gpu_time, start, stop);
+#ifndef NDEBUG
 	printf("DEBUG: Time spent scoring: %.8f ms\n", gpu_time);
+#endif
 
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
@@ -582,7 +590,9 @@ void PatchMatchRedBlackPass(const int patchhalf, int nIterations, float* d_Score
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&gpu_time, start, stop);
+#ifndef NDEBUG
 	printf("DEBUG: Time spent propagation: %.8f ms\n", gpu_time);
+#endif
 
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
@@ -620,7 +630,9 @@ void ComputeRandomSeed(curandState* d_StatesMap, const int width, const int heig
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&gpu_time, start, stop);
+#ifndef NDEBUG
 	printf("DEBUG: Time spent seed map: %.8f ms\n", gpu_time);
+#endif
 
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
