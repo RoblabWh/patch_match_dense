@@ -251,8 +251,6 @@ void DepthmapEstimator::reset() {
     delete result_plane_;
     result_plane_ = nullptr;
   }
-  result_depth_ = new cv::Mat(images_[0].rows, images_[0].cols, CV_32F, 0.0f);
-  result_plane_ = new cv::Mat(images_[0].rows, images_[0].cols, CV_64FC3, 0.0f);
 
   images_.clear();
   masks_.clear();

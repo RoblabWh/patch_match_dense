@@ -74,7 +74,7 @@ PatchMatch::ReturnValue PatchMatch::addView(const cv::Matx33d &R, const cv::Vec3
 	input->mask = mask;
 	input->sparse = sparse;
 	{
-		std::lock_guard<std::mutex>(this->m_input);
+		std::lock_guard<std::mutex> lock(this->m_input);
 		this->q_input.push(input);
 	}
 	this->count++;
@@ -97,7 +97,7 @@ PatchMatch::ReturnValue PatchMatch::getDepth(cv::Mat &depthmap,
 	bool ready;
 	DepthmapPrunerResult *result;
 	{
-		std::lock_guard<std::mutex>(this->m_output);
+		std::lock_guard<std::mutex> lock(this->m_output);
 		ready = !this->q_output.empty();
 		if (ready)
 		{
@@ -110,7 +110,7 @@ PatchMatch::ReturnValue PatchMatch::getDepth(cv::Mat &depthmap,
 		while (!ready)
 		{
 			{
-				std::lock_guard<std::mutex>(this->m_output);
+				std::lock_guard<std::mutex> lock(this->m_output);
 				ready = !this->q_output.empty();
 				if (ready)
 				{
@@ -162,13 +162,13 @@ uint8_t PatchMatch::numDropped()
 
 void PatchMatch::reset()
 {
-	std::lock_guard<std::mutex>(this->m_estimator);
-	std::lock_guard<std::mutex>(this->m_cleaner);
-	std::lock_guard<std::mutex>(this->m_pruner);
-	std::lock_guard<std::mutex>(this->m_input);
-	std::lock_guard<std::mutex>(this->m_hidden1);
-	std::lock_guard<std::mutex>(this->m_hidden2);
-	std::lock_guard<std::mutex>(this->m_output);
+	std::lock_guard<std::mutex> lock_estimator(this->m_estimator);
+	std::lock_guard<std::mutex> lock_cleaner(this->m_cleaner);
+	std::lock_guard<std::mutex> lock_pruner(this->m_pruner);
+	std::lock_guard<std::mutex> lock_input(this->m_input);
+	std::lock_guard<std::mutex> lock_hidden1(this->m_hidden1);
+	std::lock_guard<std::mutex> lock_hidden2(this->m_hidden2);
+	std::lock_guard<std::mutex> lock_output(this->m_output);
 	this->q_input = std::queue<std::shared_ptr<DepthmapInput>>();
 	this->q_hidden1 = std::queue<DepthmapEstimatorResult*>();
 	this->q_hidden2 = std::queue<DepthmapCleanerResult*>();
@@ -184,11 +184,11 @@ void PatchMatch::run_estimator()
 	while (this->alive)
 	{
 		std::this_thread::yield();
-		std::lock_guard<std::mutex>(this->m_estimator);
+		std::lock_guard<std::mutex> lock_estimator(this->m_estimator);
 		bool has_new_input;
 		std::shared_ptr<DepthmapInput> input;
 		{
-			std::lock_guard<std::mutex>(this->m_input);
+			std::lock_guard<std::mutex> lock(this->m_input);
 			has_new_input = !this->q_input.empty();
 			if (has_new_input)
 			{
@@ -210,7 +210,7 @@ void PatchMatch::run_estimator()
 			{
 				this->estimator->ComputePatchMatch(result);
 				{
-					std::lock_guard<std::mutex>(this->m_hidden1);
+					std::lock_guard<std::mutex> lock(this->m_hidden1);
 					this->q_hidden1.push(result);
 				}
 				this->estimator->PopHeadUnlessOne();
@@ -224,11 +224,11 @@ void PatchMatch::run_cleaner()
 	while (this->alive)
 	{
 		std::this_thread::yield();
-		std::lock_guard<std::mutex>(this->m_cleaner);
+		std::lock_guard<std::mutex> lock_cleaner(this->m_cleaner);
 		bool has_new_input;
 		DepthmapEstimatorResult *input;
 		{
-			std::lock_guard<std::mutex>(this->m_hidden1);
+			std::lock_guard<std::mutex> lock(this->m_hidden1);
 			has_new_input = !this->q_hidden1.empty();
 			if (has_new_input)
 			{
@@ -250,7 +250,7 @@ void PatchMatch::run_cleaner()
 			{
 				this->cleaner->Clean(result);
 				{
-					std::lock_guard<std::mutex>(this->m_hidden2);
+					std::lock_guard<std::mutex> lock(this->m_hidden2);
 					this->q_hidden2.push(result);
 				}
 				this->cleaner->PopHeadUnlessOne();
@@ -264,11 +264,11 @@ void PatchMatch::run_pruner()
 	while (this->alive)
 	{
 		std::this_thread::yield();
-		std::lock_guard<std::mutex>(this->m_pruner);
+		std::lock_guard<std::mutex> lock_pruner(this->m_pruner);
 		bool has_new_input;
 		DepthmapCleanerResult *input;
 		{
-			std::lock_guard<std::mutex>(this->m_hidden2);
+			std::lock_guard<std::mutex> lock(this->m_hidden2);
 			has_new_input = !this->q_hidden2.empty();
 			if (has_new_input)
 			{
@@ -285,7 +285,7 @@ void PatchMatch::run_pruner()
 			{
 				this->pruner->Prune(result);
 				{
-					std::lock_guard<std::mutex>(this->m_output);
+					std::lock_guard<std::mutex> lock(this->m_output);
 					this->q_output.push(result);
 				}
 				this->pruner->PopHead();
